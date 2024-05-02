@@ -47,7 +47,7 @@ def training_pipeline(args: argparse.Namespace):
                                training_args=training_args,
                                dataset=data,
                                tokenizer=model.tokenizer,
-                               args=args
+                               args=args,
                                optimizer = optimizer)
         logger.info("Complete loading trainer!")
 
