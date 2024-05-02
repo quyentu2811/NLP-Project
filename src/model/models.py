@@ -18,7 +18,7 @@ class GeneralModel:
         self.checkpoint = checkpoint
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.tokenizer = AutoTokenizer.from_pretrained(checkpoint)
-        self.model = AutoModelForSeq2SeqLM.from_pretrained(checkpoint).to(self.device)
+        self.base_model = AutoModelForSeq2SeqLM.from_pretrained(checkpoint).to(self.device)
         self.rank = rank
         self.initialize_lora()
 
