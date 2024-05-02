@@ -18,17 +18,19 @@ class GeneralModel:
         self.checkpoint = checkpoint
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.tokenizer = AutoTokenizer.from_pretrained(checkpoint)
-        self.base_model = AutoModelForSeq2SeqLM.from_pretrained(checkpoint).to(self.device)
-        
-        # Khởi tạo các thích ứng LoRA cho mỗi lớp transformer
-        self.lora_matrices = nn.ModuleList([
-            nn.Linear(self.base_model.config.hidden_size, rank, bias = False).to(self.device)
-            for _ in range(len(self.base_model.config.num_hidden_layers))
+        self.model = AutoModelForSeq2SeqLM.from_pretrained(checkpoint).to(self.device)
+        self.rank = rank
+        self.initialize_lora()
+
+    def initialize_lora(self): 
+        self.lora_apdaptations = nn.ModuleList([
+            nn.Linear(self.model.config.hidden_size, self.rank, bias=False).to(self.device)
+            for _ in range(self.model.config.num_hidden_layers)
         ])
-    def apply_lora(self, hidden_states, layer_index):
-        # Áp dụng thích ứng LoRa cho trạng thái ẩn tại một lớp cụ thể
-        lora_adaptation = self.lora_matrices[layer_index]
-        return hidden_states + lora_adaptation(hidden_states)
+        self.lora_revert = nn.ModuleList([
+            nn.Linear(self.rank, self.model.config.hidden_size, bias=False).to(self.device)
+            for _ in range(self.model.config.num_hidden_layers)
+        ])
     def forward(self, input_text, **kwargs):
         """
         Phương thức nhận văn bản đầu vào, mã hóa thành input_ids, sử dụng mô hình để sinh văn bản

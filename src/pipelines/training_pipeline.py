@@ -2,6 +2,7 @@ import logging
 
 import os
 import sys
+import torch
 import argparse # module giúp phân tích các tham số dòng lệnh, cho phép
                 # người dùng tùy chỉnh các biến khi chạy script từ terminal
 
@@ -31,6 +32,12 @@ def training_pipeline(args: argparse.Namespace):
         data = preprocessing_data(data, model.tokenizer)
         logger.info("Complete pre-processing dataset!")
 
+        # optimizer LoRA
+        optimizer = torch.optim.Adam([
+            {'params': model.lora_apdaptations.parameters()},
+            {'params': model.lora_revert.parameters()}
+        ], lr=1e-4)
+
         # Load training arguments
         training_args = load_training_arguments(args)
         logger.info("Complete loading training arguments!")
@@ -40,7 +47,8 @@ def training_pipeline(args: argparse.Namespace):
                                training_args=training_args,
                                dataset=data,
                                tokenizer=model.tokenizer,
-                               args=args)
+                               args=args
+                               optimizer = optimizer)
         logger.info("Complete loading trainer!")
 
         # Train model
