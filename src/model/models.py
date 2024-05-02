@@ -24,12 +24,12 @@ class GeneralModel:
 
     def initialize_lora(self): 
         self.lora_apdaptations = nn.ModuleList([
-            nn.Linear(self.model.config.hidden_size, self.rank, bias=False).to(self.device)
-            for _ in range(self.model.config.num_hidden_layers)
+            nn.Linear(self.base_model.config.hidden_size, self.rank, bias=False).to(self.device)
+            for _ in range(self.base_model.config.num_hidden_layers)
         ])
         self.lora_revert = nn.ModuleList([
-            nn.Linear(self.rank, self.model.config.hidden_size, bias=False).to(self.device)
-            for _ in range(self.model.config.num_hidden_layers)
+            nn.Linear(self.rank, self.base_model.config.hidden_size, bias=False).to(self.device)
+            for _ in range(self.base_model.config.num_hidden_layers)
         ])
     def forward(self, input_text, **kwargs):
         """
