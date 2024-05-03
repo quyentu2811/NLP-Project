@@ -121,6 +121,7 @@ def load_trainer(model, training_args, dataset, tokenizer, args, optimizer):
             train_dataset=dataset["train"],
             eval_dataset=dataset["validation"],
             tokenizer=tokenizer,
+            optimizers = (optimizer, None)
             # callbacks=callbacks,
             # compute_metrics=custom_compute_metrics
         )

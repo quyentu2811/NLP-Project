@@ -36,7 +36,7 @@ def training_pipeline(args: argparse.Namespace):
         optimizer = torch.optim.Adam([
             {'params': model.lora_apdaptations.parameters()},
             {'params': model.lora_revert.parameters()}
-        ], lr=1e-4)
+        ], lr=5e-5)
 
         # Load training arguments
         training_args = load_training_arguments(args)
@@ -48,7 +48,7 @@ def training_pipeline(args: argparse.Namespace):
                                dataset=data,
                                tokenizer=model.tokenizer,
                                args=args,
-                               optimizer = optimizer)
+                               optimizers = optimizer)
         logger.info("Complete loading trainer!")
 
         # Train model

@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 # General class for BART and FLAN-T5
 class GeneralModel:
     # Hàm khởi tạo để lưu checkpoint:
-    def __init__(self, checkpoint, rank = 32):
+    def __init__(self, checkpoint, rank = 128):
         """
         Tạo một thiết bị dựa trên khả năng của hệ thống, và tải tokenizer và mô hình từ checkpoint đó
         """
@@ -31,22 +31,20 @@ class GeneralModel:
             nn.Linear(self.rank, self.base_model.config.hidden_size, bias=False).to(self.device)
             for _ in range(self.base_model.config.num_hidden_layers)
         ])
-    def forward(self, input_text, **kwargs):
+    def forward(self, input_ids):
         """
         Phương thức nhận văn bản đầu vào, mã hóa thành input_ids, sử dụng mô hình để sinh văn bản
         LoRa được áp dụng trong quá trình truyền tín hiệu qua mô hình
         """
-        input_ids = self.tokenizer.encode(input_text, return_tensors="pt").to(self.device)
-        outputs = self.base_model(input_ids, **kwargs)
-
+        outputs = self.base_model(input_ids, output_hidden_states = True)
         new_hidden_states = []
-        for i, hidden_state in enumerate(outputs.last_hidden_state):
-            adapted_hidden_state = self.apply_lora(hidden_state, i)
-            new_hidden_states.append(adapted_hidden_state)
+        for i, hidden_state in enumerate(outputs.hidden_state):
+            adapted_hidden_state = self.lora_apdaptations[i](hidden_state)
+            adapted_hidden_state = self.lora_revert[i](adapted_hidden_state)
+            new_hidden_states.append(hidden_state + adapted_hidden_state)
         
         outputs.last_hidden_state = torch.stack(new_hidden_states)
-        generate_text = self.tokenizer.decode(outputs[0], skip_special_tokens = True)
-        return generate_text
+        return outputs.logits
     def generate(self, input_text, **kwargs):
         try:
             """
@@ -56,7 +54,9 @@ class GeneralModel:
             """
             logger.info(f"Generating output...")
             input_ids = self.tokenizer.encode(input_text, return_tensors="pt").to(self.device)
-            generated_text = self.forward(input_ids, **kwargs)
+            outputs = self.forward(input_ids)
+            generated_text = self.tokenizer.decode(outputs, skip_special_tokens = True)
+
             # generated_text = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
             logger.info(f"Summary: {generated_text}")
 
