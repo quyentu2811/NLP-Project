@@ -21,19 +21,17 @@ class GeneralModel(nn.Module):
         self.tokenizer = AutoTokenizer.from_pretrained(checkpoint)
         self.base_model = AutoModelForSeq2SeqLM.from_pretrained(checkpoint).to(self.device)
         self.rank = rank
-        self.lora_apdaptations = nn.ModuleList()
-        self.lora_revert = nn.ModuleList()
 
-        for _ in range(self.base_model.config.num_hidden_layers):
-            # Adaptation layer reduces dimensionality from hidden_size to rank
-            adaptation = nn.Linear(self.base_model.config.hidden_size, self.rank, bias=False).to(self.device)
-            self.lora_adaptations.append(adaptation)
-            
-            # Revert layer projects back from rank to hidden_size
-            revert = nn.Linear(self.rank, self.base_model.config.hidden_size, bias=False).to(self.device)
-            self.lora_revert.append(revert)
+        self.lora_apdaptations = nn.ModuleList([
+            nn.Linear(self.base_model.config.hidden_size, self.rank, bias=False).to(self.device)
+            for _ in range(self.base_model.config.num_hidden_layers)
+        ])
+        self.lora_revert = nn.ModuleList([
+            nn.Linear(self.rank, self.base_model.config.hidden_size, bias=False).to(self.device)
+            for _ in range(self.base_model.config.num_hidden_layers)
+        ])
 
-    def forward(self, input_ids, attention_mask = None):
+    def forward(self, input_ids, attention_mask=None):
         """
         Phương thức nhận văn bản đầu vào, mã hóa thành input_ids, sử dụng mô hình để sinh văn bản
         LoRa được áp dụng trong quá trình truyền tín hiệu qua mô hình

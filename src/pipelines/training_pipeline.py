@@ -34,9 +34,10 @@ def training_pipeline(args: argparse.Namespace):
 
         # optimizer LoRA
         optimizer = torch.optim.Adam([
-            {'params': model.lora_apdaptations.parameters()},
-            {'params': model.lora_revert.parameters()}
-        ], lr=5e-5)
+            {'params': model.lora_adaptations.parameters(), 'lr': 1e-4},
+            {'params': model.lora_revert.parameters(), 'lr': 1e-4},
+            {'params': model.base_model.parameters(), 'lr': 5e-5}
+            ], lr=5e-5)
 
         # Load training arguments
         training_args = load_training_arguments(args)
