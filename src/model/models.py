@@ -36,15 +36,16 @@ class GeneralModel:
         Phương thức nhận văn bản đầu vào, mã hóa thành input_ids, sử dụng mô hình để sinh văn bản
         LoRa được áp dụng trong quá trình truyền tín hiệu qua mô hình
         """
-        outputs = self.base_model(input_ids, output_hidden_states = True)
+        outputs = self.base_model(input_ids, return_dict=True)
+        
         new_hidden_states = []
-        for i, hidden_state in enumerate(outputs.hidden_state):
+        for i, hidden_state in enumerate(outputs.hidden_states):
             adapted_hidden_state = self.lora_apdaptations[i](hidden_state)
             adapted_hidden_state = self.lora_revert[i](adapted_hidden_state)
             new_hidden_states.append(hidden_state + adapted_hidden_state)
         
-        outputs.last_hidden_state = torch.stack(new_hidden_states)
-        return outputs.logits
+        outputs['last_hidden_state'] = new_hidden_states[-1]
+        return outputs
     def generate(self, input_text, **kwargs):
         try:
             """
