@@ -9,29 +9,31 @@ logger = logging.getLogger(__name__)
 
 
 # General class for BART and FLAN-T5
-class GeneralModel:
+class GeneralModel(nn.Module):
     # Hàm khởi tạo để lưu checkpoint:
     def __init__(self, checkpoint, rank = 128):
         """
         Tạo một thiết bị dựa trên khả năng của hệ thống, và tải tokenizer và mô hình từ checkpoint đó
         """
+        super(GeneralModel, self).__init__()
         self.checkpoint = checkpoint
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.tokenizer = AutoTokenizer.from_pretrained(checkpoint)
         self.base_model = AutoModelForSeq2SeqLM.from_pretrained(checkpoint).to(self.device)
         self.rank = rank
-        self.initialize_lora()
+        self.lora_apdaptations = nn.ModuleList()
+        self.lora_revert = nn.ModuleList()
 
-    def initialize_lora(self): 
-        self.lora_apdaptations = nn.ModuleList([
-            nn.Linear(self.base_model.config.hidden_size, self.rank, bias=False).to(self.device)
-            for _ in range(self.base_model.config.num_hidden_layers)
-        ])
-        self.lora_revert = nn.ModuleList([
-            nn.Linear(self.rank, self.base_model.config.hidden_size, bias=False).to(self.device)
-            for _ in range(self.base_model.config.num_hidden_layers)
-        ])
-    def forward(self, input_ids):
+        for _ in range(self.base_model.config.num_hidden_layers):
+            # Adaptation layer reduces dimensionality from hidden_size to rank
+            adaptation = nn.Linear(self.base_model.config.hidden_size, self.rank, bias=False).to(self.device)
+            self.lora_adaptations.append(adaptation)
+            
+            # Revert layer projects back from rank to hidden_size
+            revert = nn.Linear(self.rank, self.base_model.config.hidden_size, bias=False).to(self.device)
+            self.lora_revert.append(revert)
+
+    def forward(self, input_ids, attention_mask = None):
         """
         Phương thức nhận văn bản đầu vào, mã hóa thành input_ids, sử dụng mô hình để sinh văn bản
         LoRa được áp dụng trong quá trình truyền tín hiệu qua mô hình
@@ -39,12 +41,13 @@ class GeneralModel:
         outputs = self.base_model(input_ids, return_dict=True)
         
         new_hidden_states = []
+        
         for i, hidden_state in enumerate(outputs.hidden_states):
             adapted_hidden_state = self.lora_apdaptations[i](hidden_state)
             adapted_hidden_state = self.lora_revert[i](adapted_hidden_state)
             new_hidden_states.append(hidden_state + adapted_hidden_state)
         
-        outputs['last_hidden_state'] = new_hidden_states[-1]
+        outputs.hidden_states = tuple(new_hidden_states)
         return outputs
     def generate(self, input_text, **kwargs):
         try:
@@ -55,8 +58,10 @@ class GeneralModel:
             """
             logger.info(f"Generating output...")
             input_ids = self.tokenizer.encode(input_text, return_tensors="pt").to(self.device)
-            outputs = self.forward(input_ids)
-            generated_text = self.tokenizer.decode(outputs, skip_special_tokens = True)
+            attention_mask = (input_ids != self.tokenizer.pad_token_id).int()
+            outputs = self.forward(input_ids, attention_mask=attention_mask)
+            generated_ids = torch.argmax(outputs.logits, dim=-1)
+            generated_text = self.tokenizer.decode(generated_ids[0], skip_special_tokens=True)
 
             # generated_text = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
             logger.info(f"Summary: {generated_text}")
