@@ -1,10 +1,12 @@
 import logging
 import torch # dùng để sử dụng PyTorch
+from torch.cuda.amp import GradScaler, autocast
 import torch.nn as nn
 # sử dụng tokenizer tự động và mô hình chuỗi sang chuỗi, thích hợp cho tóm tắt văn bản
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM, T5Config
 
-logging.basicConfig(level=logging.INFO)
+
+logging.basicConfig(level=logging.ERROR)
 logger = logging.getLogger(__name__)
 
 
@@ -21,6 +23,7 @@ class GeneralModel(nn.Module):
         self.tokenizer = AutoTokenizer.from_pretrained(checkpoint)
         self.base_model = AutoModelForSeq2SeqLM.from_pretrained(checkpoint).to(self.device)
         self.rank = rank
+        self.scaler = GradScaler()  # Thêm scaler cho mixed precision
 
         self.lora_apdaptations = nn.ModuleList([
             nn.Linear(self.base_model.config.hidden_size, self.rank, bias=False).to(self.device)
@@ -36,7 +39,8 @@ class GeneralModel(nn.Module):
         Phương thức nhận văn bản đầu vào, mã hóa thành input_ids, sử dụng mô hình để sinh văn bản
         LoRa được áp dụng trong quá trình truyền tín hiệu qua mô hình
         """
-        outputs = self.base_model(input_ids, return_dict=True)
+        with autocast():  # Sử dụng autocast để thực hiện các phép toán trong độ chính xác hỗn hợp
+            outputs = self.base_model(input_ids, return_dict=True)
         
         new_hidden_states = []
         
@@ -44,8 +48,7 @@ class GeneralModel(nn.Module):
             adapted_hidden_state = self.lora_apdaptations[i](hidden_state)
             adapted_hidden_state = self.lora_revert[i](adapted_hidden_state)
             new_hidden_states.append(hidden_state + adapted_hidden_state)
-        
-        outputs.hidden_states = tuple(new_hidden_states)
+            outputs = new_hidden_states[-1]
         return outputs
     def generate(self, input_text, **kwargs):
         try:
@@ -57,7 +60,8 @@ class GeneralModel(nn.Module):
             logger.info(f"Generating output...")
             input_ids = self.tokenizer.encode(input_text, return_tensors="pt").to(self.device)
             attention_mask = (input_ids != self.tokenizer.pad_token_id).int()
-            outputs = self.forward(input_ids, attention_mask=attention_mask)
+            with autocast():
+                outputs = self.forward(input_ids, attention_mask=attention_mask)
             generated_ids = torch.argmax(outputs.logits, dim=-1)
             generated_text = self.tokenizer.decode(generated_ids[0], skip_special_tokens=True)
 
