@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 # General class for BART and FLAN-T5
 class GeneralModel(nn.Module):
     # Hàm khởi tạo để lưu checkpoint:
-    def __init__(self, checkpoint, rank = 128):
+    def __init__(self, checkpoint, rank = 32):
         """
         Tạo một thiết bị dựa trên khả năng của hệ thống, và tải tokenizer và mô hình từ checkpoint đó
         """
