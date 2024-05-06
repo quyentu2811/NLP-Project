@@ -146,7 +146,7 @@ def load_callbacks(args) -> list:
 
 def load_trainer(model, training_args, dataset, tokenizer, args, optimizer):
     try:
-        # callbacks = load_callbacks(args)
+        callbacks = load_callbacks(args)
         # def custom_compute_metrics(eval_preds):
         #     return compute_metrics(eval_preds, tokenizer)
 
@@ -156,8 +156,8 @@ def load_trainer(model, training_args, dataset, tokenizer, args, optimizer):
             train_dataset=dataset["train"],
             eval_dataset=dataset["validation"],
             tokenizer=tokenizer,
-            optimizers = (optimizer, None)
-            # callbacks=callbacks
+            optimizers = (optimizer, None),
+            callbacks=callbacks
             # compute_metrics=custom_compute_metrics
         )
         return trainer

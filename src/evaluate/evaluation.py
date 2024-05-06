@@ -42,7 +42,7 @@ def evaluation_rouge(model: GeneralModel, data: Dataset) -> dict:
 
     model_summaries = []
 
-    prefix = "Summarize the followring conversation:\n\n"
+    prefix = "Summarize the following conversation:\n\n"
     suffix = "\n\nSummary: "
 
     for idx, dialogue in enumerate(dialogues):
