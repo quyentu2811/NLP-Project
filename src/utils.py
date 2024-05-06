@@ -46,6 +46,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--early_stopping_threshold", type=float, default=0.0)
     parser.add_argument("--metric_for_best_model", type=str, default="eval_loss")
     parser.add_argument("--load_best_model_at_end", type=bool, default=False)
+    parser.add_argument("--fp16", default=True)
     args = parser.parse_args()
     return args
 
@@ -81,7 +82,8 @@ def load_training_arguments(args):
                 report_to=args.report_to,
                 metric_for_best_model=args.metric_for_best_model,
                 load_best_model_at_end=args.load_best_model_at_end,
-                run_name=args.run_name
+                run_name=args.run_name,
+                fp16 = args.fp16
             )
 
         return training_args
@@ -109,7 +111,7 @@ def load_callbacks(args) -> list:
         logger.error(f"Error while loading callbacks: {e}")
         raise e
 
-def load_trainer(model, training_args, dataset, tokenizer, args, optimizer):
+def load_trainer(model, training_args, dataset, tokenizer, args, optimizer, ):
     try:
         # callbacks = load_callbacks(args)
         # def custom_compute_metrics(eval_preds):
@@ -122,7 +124,7 @@ def load_trainer(model, training_args, dataset, tokenizer, args, optimizer):
             eval_dataset=dataset["validation"],
             tokenizer=tokenizer,
             optimizers = (optimizer, None)
-            # callbacks=callbacks,
+            # callbacks=callbacks
             # compute_metrics=custom_compute_metrics
         )
         return trainer
