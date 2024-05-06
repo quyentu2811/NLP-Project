@@ -47,7 +47,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--save_total_limit", type=int, default=None)
     parser.add_argument("--report_to", type=str, default="wandb")
     parser.add_argument("--run_name", type=str, default="flan-t5-base-model")
-    parser.add_argument("--early_stopping_patience", type=int, default=2)
+    parser.add_argument("--early_stopping_patience", type=int, default=5)
     parser.add_argument("--early_stopping_threshold", type=float, default=0.0)
     parser.add_argument("--metric_for_best_model", type=str, default="eval_loss")
     parser.add_argument("--load_best_model_at_end", type=bool, default=False)
@@ -114,7 +114,7 @@ def load_training_arguments(args):
                 push_to_hub=args.push_to_hub,
                 report_to=args.report_to,
                 metric_for_best_model=args.metric_for_best_model,
-                load_best_model_at_end=args.load_best_model_at_end,
+                load_best_model_at_end=True,
                 run_name=args.run_name,
                 fp16 = args.fp16
             )
