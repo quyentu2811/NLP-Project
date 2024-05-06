@@ -13,7 +13,7 @@ sys.path.insert(0, path)
 
 
 def postprocess_text(preds, labels):
-    nltk.download("punkt")
+    nltk.download("punkt", quiet=True)
 
     preds = [pred.strip() for pred in preds]
     labels = [label.strip() for label in labels]

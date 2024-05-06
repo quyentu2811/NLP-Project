@@ -55,33 +55,33 @@ def parse_args() -> argparse.Namespace:
     args = parser.parse_args()
     return args
 
-class WandbCallback(TrainerCallback):
-    def __init__(self, tokenizer):
-        super().__init__()
-        self.tokenizer = tokenizer
-        self.step = 0
+# class WandbCallback(TrainerCallback):
+#     def __init__(self, tokenizer):
+#         super().__init__()
+#         self.tokenizer = tokenizer
+#         self.step = 0
 
-    def on_evaluate(self, args: TrainingArguments, state: TrainerState, control: TrainerControl, **kwargs):
-        epoch = state.epoch
-        logger.info("Curent epoch: ", epoch)
+#     def on_evaluate(self, args: TrainingArguments, state: TrainerState, control: TrainerControl, **kwargs):
+#         epoch = state.epoch
+#         logger.info("Curent epoch: ", epoch)
         
-        step = state.global_step
-        logger.info("Curent step: ", step)
+#         step = state.global_step
+#         logger.info("Curent step: ", step)
 
-        logger.info(state.log_history)
+#         logger.info(state.log_history)
 
-        training_loss = state.log_history[0]["loss"]
-        logger.info("Current training loss: ", training_loss)
+#         training_loss = state.log_history[0]["loss"]
+#         logger.info("Current training loss: ", training_loss)
 
-        validation_loss = state.log_history[1]["eval_loss"]
-        logger.info("Curent valid loss: ", validation_loss)
+#         validation_loss = state.log_history[1]["eval_loss"]
+#         logger.info("Curent valid loss: ", validation_loss)
 
-        wandb.log({
-            "Training Loss": training_loss,
-            "Validation Loss": validation_loss,
-            "Epoch": epoch,
-            "Step": step
-        }) 
+#         wandb.log({
+#             "Training Loss": training_loss,
+#             "Validation Loss": validation_loss,
+#             "Epoch": epoch,
+#             "Step": step
+#         }) 
 
 def load_training_arguments(args):
     """

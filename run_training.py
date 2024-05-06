@@ -15,6 +15,7 @@ sys.path.insert(0, path)
 from src.pipelines.training_pipeline import training_pipeline
 from src.utils import parse_args
 
+warnings.filterwarnings("ignore")
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 

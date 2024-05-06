@@ -40,15 +40,16 @@ class GeneralModel(nn.Module):
         LoRa được áp dụng trong quá trình truyền tín hiệu qua mô hình
         """
         with autocast():  # Sử dụng autocast để thực hiện các phép toán trong độ chính xác hỗn hợp
-            outputs = self.base_model(input_ids, return_dict=True)
+            outputs = self.base_model(input_ids, attention_mask = attention_mask, return_dict=True)
+            hidden_states = outputs.last_hidden_state
         
         new_hidden_states = []
         
-        for i, hidden_state in enumerate(outputs.hidden_states):
+        for i, hidden_state in enumerate(hidden_states):
             adapted_hidden_state = self.lora_apdaptations[i](hidden_state)
             adapted_hidden_state = self.lora_revert[i](adapted_hidden_state)
             new_hidden_states.append(hidden_state + adapted_hidden_state)
-            outputs = new_hidden_states[-1]
+            outputs = new_hidden_states
         return outputs
     def generate(self, input_text, **kwargs):
         try:
@@ -62,6 +63,7 @@ class GeneralModel(nn.Module):
             attention_mask = (input_ids != self.tokenizer.pad_token_id).int()
             with autocast():
                 outputs = self.forward(input_ids, attention_mask=attention_mask)
+                
             generated_ids = torch.argmax(outputs.logits, dim=-1)
             generated_text = self.tokenizer.decode(generated_ids[0], skip_special_tokens=True)
 

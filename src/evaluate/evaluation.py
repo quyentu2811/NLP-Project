@@ -63,20 +63,20 @@ def evaluation_rouge(model: GeneralModel, data: Dataset) -> dict:
 
     return results
 
-if __name__=='__main__':
-    parser = argparse.ArgumentParser(description="Evaluation metric")
-    parser.add_argument("--datapath", type=str, default="knkarthick/dialogsum")
-    parser.add_argument("--checkpoint", type=str, default="google/flan-t5-base")
-    args = parser.parse_args()
+# if __name__=='__main__':
+#     parser = argparse.ArgumentParser(description="Evaluation metric")
+#     parser.add_argument("--datapath", type=str, default="knkarthick/dialogsum")
+#     parser.add_argument("--checkpoint", type=str, default="google/flan-t5-base")
+#     args = parser.parse_args()
 
 
-    datapath = args.datapath
-    checkpoint = args.checkpoint
+#     datapath = args.datapath
+#     checkpoint = args.checkpoint
 
-    data = load_dataset(datapath, split="test")
+#     data = load_dataset(datapath, split="test")
 
-    model = GeneralModel(checkpoint)
+#     model = GeneralModel(checkpoint)
 
-    results = evaluation_rouge(model, data)
-    logger.info(results)
-    print(results)
+#     results = evaluation_rouge(model, data)
+#     logger.info(results)
+#     print(results)
