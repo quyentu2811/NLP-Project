@@ -2,16 +2,21 @@ import argparse
 
 import os
 import sys
+from transformers.trainer_callback import TrainerControl, TrainerState
+from transformers.training_args import TrainingArguments
 import yaml
 
 import logging
 
 from transformers import Seq2SeqTrainer, Seq2SeqTrainingArguments, EarlyStoppingCallback
 
-# path = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-# sys.path.insert(0, path)
+import wandb
+from transformers import TrainerCallback
 
-# from src.evaluate.rouge_metric import compute_metrics
+path = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+sys.path.insert(0, path)
+
+from src.evaluate.rouge_metric import compute_metrics
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -46,9 +51,37 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--early_stopping_threshold", type=float, default=0.0)
     parser.add_argument("--metric_for_best_model", type=str, default="eval_loss")
     parser.add_argument("--load_best_model_at_end", type=bool, default=False)
-    # parser.add_argument("--fp16", default=True)
+    parser.add_argument("--fp16", default=True)
     args = parser.parse_args()
     return args
+
+class WandbCallback(TrainerCallback):
+    def __init__(self, tokenizer):
+        super().__init__()
+        self.tokenizer = tokenizer
+        self.step = 0
+
+    def on_evaluate(self, args: TrainingArguments, state: TrainerState, control: TrainerControl, **kwargs):
+        epoch = state.epoch
+        logger.info("Curent epoch: ", epoch)
+        
+        step = state.global_step
+        logger.info("Curent step: ", step)
+
+        logger.info(state.log_history)
+
+        training_loss = state.log_history[0]["loss"]
+        logger.info("Current training loss: ", training_loss)
+
+        validation_loss = state.log_history[1]["eval_loss"]
+        logger.info("Curent valid loss: ", validation_loss)
+
+        wandb.log({
+            "Training Loss": training_loss,
+            "Validation Loss": validation_loss,
+            "Epoch": epoch,
+            "Step": step
+        }) 
 
 def load_training_arguments(args):
     """
@@ -83,7 +116,7 @@ def load_training_arguments(args):
                 metric_for_best_model=args.metric_for_best_model,
                 load_best_model_at_end=args.load_best_model_at_end,
                 run_name=args.run_name,
-                # fp16 = args.fp16
+                fp16 = args.fp16
             )
 
         return training_args
@@ -111,7 +144,7 @@ def load_callbacks(args) -> list:
         logger.error(f"Error while loading callbacks: {e}")
         raise e
 
-def load_trainer(model, training_args, dataset, tokenizer, args, optimizer, ):
+def load_trainer(model, training_args, dataset, tokenizer, args, optimizer):
     try:
         # callbacks = load_callbacks(args)
         # def custom_compute_metrics(eval_preds):
@@ -149,3 +182,4 @@ def load_config(configpath):
 if __name__=='__main__':
     args = parse_args()
     print(args)
+
