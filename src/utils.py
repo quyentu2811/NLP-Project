@@ -46,7 +46,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--early_stopping_threshold", type=float, default=0.0)
     parser.add_argument("--metric_for_best_model", type=str, default="eval_loss")
     parser.add_argument("--load_best_model_at_end", type=bool, default=False)
-    parser.add_argument("--fp16", default=True)
+    # parser.add_argument("--fp16", default=True)
     args = parser.parse_args()
     return args
 
@@ -83,7 +83,7 @@ def load_training_arguments(args):
                 metric_for_best_model=args.metric_for_best_model,
                 load_best_model_at_end=args.load_best_model_at_end,
                 run_name=args.run_name,
-                fp16 = args.fp16
+                # fp16 = args.fp16
             )
 
         return training_args
