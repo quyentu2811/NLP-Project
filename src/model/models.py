@@ -34,13 +34,13 @@ class GeneralModel(nn.Module):
             for _ in range(self.base_model.config.num_hidden_layers)
         ])
 
-    def forward(self, input_ids, attention_mask=None):
+    def forward(self, input_ids, attention_mask=None, decoder_input_ids = None):
         """
         Phương thức nhận văn bản đầu vào, mã hóa thành input_ids, sử dụng mô hình để sinh văn bản
         LoRa được áp dụng trong quá trình truyền tín hiệu qua mô hình
         """
         with autocast():  # Sử dụng autocast để thực hiện các phép toán trong độ chính xác hỗn hợp
-            outputs = self.base_model(input_ids, attention_mask = attention_mask, return_dict=True)
+            outputs = self.base_model(input_ids, attention_mask = attention_mask, decoder_input_ids = decoder_input_ids, return_dict=True)
             hidden_states = outputs.last_hidden_state
         
         new_hidden_states = []
