@@ -50,7 +50,14 @@ class GeneralModel(nn.Module):
             adapted_hidden_state = self.lora_revert[i](adapted_hidden_state)
             new_hidden_states.append(hidden_state + adapted_hidden_state)
             outputs = new_hidden_states
-        return outputs
+        return transformers.modeling_outputs.Seq2SeqLMOutput(
+            last_hidden_state=torch.stack(new_hidden_states),
+            past_key_values=outputs.past_key_values,
+            decoder_hidden_states=outputs.decoder_hidden_states,
+            decoder_attentions=outputs.decoder_attentions,
+            cross_attentions=outputs.cross_attentions,
+            encoder_last_hidden_state=outputs.encoder_last_hidden_state  # Giữ encoder output nếu cần
+        )
     def generate(self, input_text, **kwargs):
         try:
             """
@@ -58,16 +65,17 @@ class GeneralModel(nn.Module):
             hình seq2seq. Văn bản đầu ra được sinh từ việc mã hóa văn bản đầu vào thành input_ids, 
             sử dụng mô hình để sinh ra các token mới, và giải mã các token này thành văn bản
             """
-            logger.info(f"Generating output...")
+            logger.info("Generating output...")
             input_ids = self.tokenizer.encode(input_text, return_tensors="pt").to(self.device)
             attention_mask = (input_ids != self.tokenizer.pad_token_id).int()
+            decoder_start_token = self.tokenizer.pad_token_id
+            decoder_input_ids = torch.full((input_ids.shape[0], 1), decoder_start_token, dtype=torch.long, device=self.device)
+            
             with autocast():
-                outputs = self.forward(input_ids, attention_mask=attention_mask)
-                
+                outputs = self.forward(input_ids, attention_mask=attention_mask, decoder_input_ids=decoder_input_ids)
+            
             generated_ids = torch.argmax(outputs.logits, dim=-1)
             generated_text = self.tokenizer.decode(generated_ids[0], skip_special_tokens=True)
-
-            # generated_text = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
             logger.info(f"Summary: {generated_text}")
 
             return generated_text
