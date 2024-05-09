@@ -3,7 +3,7 @@ import logging
 import os
 import sys
 import torch
-from perf import LoraConfig, get_peft_model, TaskType
+from peft import LoraConfig, get_peft_model, TaskType
 import argparse # module giúp phân tích các tham số dòng lệnh, cho phép
                 # người dùng tùy chỉnh các biến khi chạy script từ terminal
 
