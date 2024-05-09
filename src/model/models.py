@@ -1,6 +1,6 @@
 import logging
 import torch # dùng để sử dụng PyTorch
-from torch.cuda.amp import GradScaler, autocast
+# from torch.cuda.amp import GradScaler, autocast
 import torch.nn as nn
 # sử dụng tokenizer tự động và mô hình chuỗi sang chuỗi, thích hợp cho tóm tắt văn bản
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM, T5Config
@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 # General class for BART and FLAN-T5
 class GeneralModel(nn.Module):
     # Hàm khởi tạo để lưu checkpoint:
-    def __init__(self, checkpoint, rank = 32):
+    def __init__(self, checkpoint):
         """
         Tạo một thiết bị dựa trên khả năng của hệ thống, và tải tokenizer và mô hình từ checkpoint đó
         """
@@ -22,42 +22,7 @@ class GeneralModel(nn.Module):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.tokenizer = AutoTokenizer.from_pretrained(checkpoint)
         self.base_model = AutoModelForSeq2SeqLM.from_pretrained(checkpoint, torch_dtype = torch.float16).to(self.device)
-        self.rank = rank
-        self.scaler = GradScaler()  # Thêm scaler cho mixed precision
-
-        self.lora_apdaptations = nn.ModuleList([
-            nn.Linear(self.base_model.config.hidden_size, self.rank, bias=False).to(self.device)
-            for _ in range(self.base_model.config.num_hidden_layers)
-        ])
-        self.lora_revert = nn.ModuleList([
-            nn.Linear(self.rank, self.base_model.config.hidden_size, bias=False).to(self.device)
-            for _ in range(self.base_model.config.num_hidden_layers)
-        ])
-
-    def forward(self, input_ids, attention_mask=None, decoder_input_ids = None):
-        """
-        Phương thức nhận văn bản đầu vào, mã hóa thành input_ids, sử dụng mô hình để sinh văn bản
-        LoRa được áp dụng trong quá trình truyền tín hiệu qua mô hình
-        """
-        with autocast():  # Sử dụng autocast để thực hiện các phép toán trong độ chính xác hỗn hợp
-            outputs = self.base_model(input_ids, attention_mask = attention_mask, decoder_input_ids = decoder_input_ids, return_dict=True)
-            hidden_states = outputs.last_hidden_state
         
-        new_hidden_states = []
-        
-        for i, hidden_state in enumerate(hidden_states):
-            adapted_hidden_state = self.lora_apdaptations[i](hidden_state)
-            adapted_hidden_state = self.lora_revert[i](adapted_hidden_state)
-            new_hidden_states.append(hidden_state + adapted_hidden_state)
-            outputs = new_hidden_states
-        return transformers.modeling_outputs.Seq2SeqLMOutput(
-            last_hidden_state=torch.stack(new_hidden_states),
-            past_key_values=outputs.past_key_values,
-            decoder_hidden_states=outputs.decoder_hidden_states,
-            decoder_attentions=outputs.decoder_attentions,
-            cross_attentions=outputs.cross_attentions,
-            encoder_last_hidden_state=outputs.encoder_last_hidden_state  # Giữ encoder output nếu cần
-        )
     def generate(self, input_text, **kwargs):
         try:
             """
@@ -65,17 +30,10 @@ class GeneralModel(nn.Module):
             hình seq2seq. Văn bản đầu ra được sinh từ việc mã hóa văn bản đầu vào thành input_ids, 
             sử dụng mô hình để sinh ra các token mới, và giải mã các token này thành văn bản
             """
-            logger.info("Generating output...")
+            logger.info(f"Generating output...")
             input_ids = self.tokenizer.encode(input_text, return_tensors="pt").to(self.device)
-            attention_mask = (input_ids != self.tokenizer.pad_token_id).int()
-            decoder_start_token = self.tokenizer.pad_token_id
-            decoder_input_ids = torch.full((input_ids.shape[0], 1), decoder_start_token, dtype=torch.long, device=self.device)
-            
-            with autocast():
-                outputs = self.forward(input_ids, attention_mask=attention_mask, decoder_input_ids=decoder_input_ids)
-            
-            generated_ids = torch.argmax(outputs.logits, dim=-1)
-            generated_text = self.tokenizer.decode(generated_ids[0], skip_special_tokens=True)
+            outputs = self.base_model.generate(input_ids, **kwargs)
+            generated_text = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
             logger.info(f"Summary: {generated_text}")
 
             return generated_text
