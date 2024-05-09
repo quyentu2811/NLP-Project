@@ -144,7 +144,7 @@ def load_training_arguments(args):
 #         logger.error(f"Error while loading callbacks: {e}")
 #         raise e
 
-def load_trainer(model, training_args, dataset, tokenizer, args, optimizer):
+def load_trainer(model, training_args, dataset, tokenizer, args):
     try:
         # callbacks = load_callbacks(args)
         # def custom_compute_metrics(eval_preds):
@@ -156,7 +156,7 @@ def load_trainer(model, training_args, dataset, tokenizer, args, optimizer):
             train_dataset=dataset["train"],
             eval_dataset=dataset["validation"],
             tokenizer=tokenizer,
-            optimizers = (optimizer, None)
+            # optimizers = (optimizer, None)
             # callbacks=callbacks
             # compute_metrics=custom_compute_metrics
         )
