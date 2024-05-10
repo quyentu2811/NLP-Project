@@ -36,10 +36,7 @@ if __name__=='__main__':
     data = load_dataset(datapath, split="test")
     logger.info(f"Loaded dataset test from: {datapath}")
 
-    model = PeftModel.from_pretrained(GeneralModel, 
-                                      'tuquyennnn/flant5-small-finetuning-v3',
-                                       torch_dtype=torch.bfloat16,
-                                       is_trainable=False)
+    model = PeftModel.from_pretrained(checkpoint, device_map={"cuda": 0} if torch.cuda.is_available() else {"cpu": 0})
     logger.info(f"Loaded model from: {checkpoint}")
 
     results = evaluation_rouge(model, data)

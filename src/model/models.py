@@ -11,13 +11,12 @@ logger = logging.getLogger(__name__)
 
 
 # General class for BART and FLAN-T5
-class GeneralModel(nn.Module):
+class GeneralModel():
     # Hàm khởi tạo để lưu checkpoint:
     def __init__(self, checkpoint):
         """
         Tạo một thiết bị dựa trên khả năng của hệ thống, và tải tokenizer và mô hình từ checkpoint đó
         """
-        super(GeneralModel, self).__init__()
         self.checkpoint = checkpoint
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.tokenizer = AutoTokenizer.from_pretrained(checkpoint)
