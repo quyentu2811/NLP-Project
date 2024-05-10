@@ -42,14 +42,13 @@ def training_pipeline(args: argparse.Namespace):
             bias = "none",
             task_type = TaskType.SEQ_2_SEQ_LM
         )
-
+        peft_model = get_peft_model(model.base_model,lora_config)
         # Load training arguments
         training_args = load_training_arguments(args)
         logger.info("Complete loading training arguments!")
 
         # Load trainer
-
-        trainer = load_trainer(model=get_peft_model(model.base_model,lora_config),
+        trainer = load_trainer(model=peft_model,
                                training_args=training_args,
                                dataset=data,
                                tokenizer=model.tokenizer,

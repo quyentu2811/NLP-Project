@@ -19,6 +19,8 @@ sys.path.insert(0, path)
 
 from src.model.models import GeneralModel
 from src.evaluate.evaluation import evaluation_rouge
+from peft import PeftModel, PeftConfig
+import torch
 
 if __name__=='__main__':
     parser = argparse.ArgumentParser(description="Evaluation metric")
@@ -34,7 +36,9 @@ if __name__=='__main__':
     data = load_dataset(datapath, split="test")
     logger.info(f"Loaded dataset test from: {datapath}")
 
-    model = GeneralModel(checkpoint)
+    model = PeftModel.from_pretrained(GeneralModel, 
+                                       torch_dtype=torch.bfloat16,
+                                       is_trainable=False)
     logger.info(f"Loaded model from: {checkpoint}")
 
     results = evaluation_rouge(model, data)

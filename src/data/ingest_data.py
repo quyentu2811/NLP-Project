@@ -3,8 +3,8 @@ import logging
 from datasets import load_dataset # là hàm dùng để tải tập dữ liệu từ kho dữ liệu
 from datasets import DatasetDict # cấu trúc dữ liệu để lưu tập dữ liệu
 
-logging.basicConfig(level=logging.INFO) # ghi nhật kí cấp độ thông tin
-logger = logging.getLogger(__name__)
+# logging.basicConfig(level=logging.INFO) # ghi nhật kí cấp độ thông tin
+# logger = logging.getLogger(__name__)
 # lớp bao bọc quá trình tải dữ liệu
 class IngestDataset:
     # hàm lưu đường dẫn hoặc tên của tập dữ liệu
