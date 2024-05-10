@@ -9,8 +9,8 @@ from datasets import DatasetDict # lưu trữ tập dữ liệu
 # Dùng để tải và sử dụng bộ tách từ (tokenizer) đã được đào tạo sẵn
 from transformers import AutoTokenizer 
 
-# logging.basicConfig(level=logging.INFO)
-# logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # lấy đường dẫn tuyệt đối của thư mục chứa tệp hiện tại
 path = os.path.abspath(os.path.dirname(__file__))

@@ -5,8 +5,8 @@ from datasets import DatasetDict, Dataset
 from transformers import AutoTokenizer
 from ingest_data import ingest_data
 # Khởi tạo để ghi lại các thông báo trên màn hình từ mức độ Info trở lên
-# logging.basicConfig(level=logging.INFO)
-# logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 """
 DataStrategy là một lớp trừu tượng trong Python, được sử dụng như một khuôn mẫu cơ bản cho các lớp khác để kế thừa và triển khai. 
