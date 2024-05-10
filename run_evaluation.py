@@ -37,6 +37,7 @@ if __name__=='__main__':
     logger.info(f"Loaded dataset test from: {datapath}")
 
     model = PeftModel.from_pretrained(GeneralModel, 
+                                      'tuquyennnn/flant5-small-finetuning-v3',
                                        torch_dtype=torch.bfloat16,
                                        is_trainable=False)
     logger.info(f"Loaded model from: {checkpoint}")
