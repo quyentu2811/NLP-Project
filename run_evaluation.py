@@ -37,7 +37,7 @@ if __name__=='__main__':
     logger.info(f"Loaded dataset test from: {datapath}")
 
     model = PeftModel.from_pretrained(GeneralModel,
-                                    "tuquyennnn/LoRA/FlanT5-small_v1",
+                                    "tuquyennnn/FlanT5-small_v1",
                                     device_map={"cuda": 0} if torch.cuda.is_available() else {"cpu": 0})
     logger.info(f"Loaded model from: {checkpoint}")
 
