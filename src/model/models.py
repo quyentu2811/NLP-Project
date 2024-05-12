@@ -11,17 +11,24 @@ logger = logging.getLogger(__name__)
 
 
 # General class for BART and FLAN-T5
-class GeneralModel():
+class GeneralModel(nn.Module):
     # Hàm khởi tạo để lưu checkpoint:
     def __init__(self, checkpoint):
         """
         Tạo một thiết bị dựa trên khả năng của hệ thống, và tải tokenizer và mô hình từ checkpoint đó
         """
+        super(GeneralModel, self).__init__()
         self.checkpoint = checkpoint
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.tokenizer = AutoTokenizer.from_pretrained(checkpoint)
         self.base_model = AutoModelForSeq2SeqLM.from_pretrained(checkpoint, torch_dtype = torch.float16).to(self.device)
-        
+    
+    def forward(self, input_text, **kwargs):
+        input_ids = self.tokenizer.encode(input_text, return_tensors="pt").to(self.device)
+        outputs = self.base_model.generate(input_ids, **kwargs)
+        generated_text = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
+        return generated_text
+
     def generate(self, input_text, **kwargs):
         try:
             """
@@ -29,11 +36,9 @@ class GeneralModel():
             hình seq2seq. Văn bản đầu ra được sinh từ việc mã hóa văn bản đầu vào thành input_ids, 
             sử dụng mô hình để sinh ra các token mới, và giải mã các token này thành văn bản
             """
-            logger.info(f"Generating output...")
-            input_ids = self.tokenizer.encode(input_text, return_tensors="pt").to(self.device)
-            outputs = self.base_model.generate(input_ids, **kwargs)
-            generated_text = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
+            generated_text = self.forward(input_text, **kwargs)
             logger.info(f"Summary: {generated_text}")
+            return generated_text
 
             return generated_text
 
