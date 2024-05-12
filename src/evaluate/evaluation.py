@@ -3,11 +3,9 @@ import logging
 import os
 import sys
 
-from datasets import Dataset, load_dataset
+from datasets import Dataset
 
 import evaluate
-
-import argparse
 
 path = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, path)
