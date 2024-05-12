@@ -43,7 +43,9 @@ if __name__=='__main__':
         logger.info(f"Loaded model from: {checkpoint}")
 
         results = evaluation_rouge(model, data)
+
         logger.info(results)
     except Exception as e:
         logger.error(f"Error: {e}")
-    
+    logger.info(results)
+    print(results)
