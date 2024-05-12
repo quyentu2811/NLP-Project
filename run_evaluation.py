@@ -47,5 +47,3 @@ if __name__=='__main__':
         logger.info(results)
     except Exception as e:
         logger.error(f"Error: {e}")
-    logger.info(results)
-    print(results)
