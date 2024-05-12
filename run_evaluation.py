@@ -32,7 +32,6 @@ if __name__=='__main__':
 
     logger.info("Parse arguments!")
     try:
-
         data = load_dataset(datapath, split="test")
         logger.info(f"Loaded dataset test from: {datapath}")
         
@@ -45,5 +44,6 @@ if __name__=='__main__':
         results = evaluation_rouge(model, data)
 
         logger.info(results)
+        print(results)
     except Exception as e:
         logger.error(f"Error: {e}")
