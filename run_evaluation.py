@@ -31,20 +31,18 @@ if __name__=='__main__':
     checkpoint = args.checkpoint
 
     logger.info("Parse arguments!")
-    try:
-        data = load_dataset(datapath, split="test")
-        logger.info(f"Loaded dataset test from: {datapath}")
-        
-        from src.model.models import GeneralModel
-        model = PeftModel.from_pretrained(model=GeneralModel(checkpoint), 
-                                    peft_model_id="tuquyennnn/LoRA-FlanT5-small-v1",
-                                    device_map={"cuda": 0} if torch.cuda.is_available() else {"cpu": 0})
-        logger.info(f"Loaded model from: {checkpoint}")
 
-        results = evaluation_rouge(model, data)
+    data = load_dataset(datapath, split="test")
+    logger.info(f"Loaded dataset test from: {datapath}")
+    
+    from src.model.models import GeneralModel
+    model = PeftModel.from_pretrained(model=GeneralModel(checkpoint), 
+                                peft_model_id="tuquyennnn/LoRA-FlanT5-small-v1",
+                                device_map={"cuda": 0} if torch.cuda.is_available() else {"cpu": 0})
+    logger.info(f"Loaded model from: {checkpoint}")
 
-        # logger.info(results)
-        print(results)
-        print("results is None")
-    except Exception as e:
-        logger.error(f"Error: {e}")
+    results = evaluation_rouge(model, data)
+
+    # logger.info(results)
+    print(results)
+    print("results is None")

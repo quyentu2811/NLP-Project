@@ -61,6 +61,9 @@ def evaluation_rouge(model: GeneralModel, data: Dataset) -> dict:
 
     return results
 
+if __name__=='__main__':
+    pass
+
 # if __name__=='__main__':
 #     parser = argparse.ArgumentParser(description="Evaluation metric")
 #     parser.add_argument("--datapath", type=str, default="knkarthick/dialogsum")
