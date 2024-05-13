@@ -49,7 +49,7 @@ def evaluation_rouge(model: GeneralModel, data: Dataset) -> dict:
     for idx, dialogue in enumerate(dialogues):
         input_text = prefix + dialogue + suffix
         input_ids = tokenizer.encode(input_text, return_tensors="pt").to(model.device)
-        output_ids = model.generate(input_ids)
+        output_ids = model.generate(input_ids=input_ids, max_length=512, early_stopping=True)
         output_text = tokenizer.decode(output_ids[0], skip_special_tokens=True)
         model_summaries.append(output_text)
 
