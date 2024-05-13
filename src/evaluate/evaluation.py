@@ -11,12 +11,13 @@ path = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, path)
 
 from model.models import GeneralModel
+from transformers import AutoTokenizer, AutoModelForSeq2SeqLM, T5Config
 # from data.ingest_data import ingest_data
 # from data.data_strategy import PostPreprocessData
 
 
-# logging.basicConfig(level=logging.INFO)
-# logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 class RougeEvaluation:
@@ -40,7 +41,7 @@ def evaluation_rouge(model: GeneralModel, data: Dataset) -> dict:
 
     model_summaries = []
 
-    tokenizer = model.base_model.config.tokenizer
+    tokenizer = AutoTokenizer.from_pretrained(model.base_model.config._name_or_path)
 
     prefix = "Summarize the following conversation:\n\n"
     suffix = "\n\nSummary: "
