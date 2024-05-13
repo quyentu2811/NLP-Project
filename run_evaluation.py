@@ -18,8 +18,9 @@ path = os.path.abspath(os.path.join(os.path.dirname(__file__)))
 sys.path.insert(0, path)
 
 from src.evaluate.evaluation import evaluation_rouge
-from peft import PeftModel, PeftConfig
+from peft import PeftModel
 import torch
+from transformers import AutoModelForSeq2SeqLM
 
 if __name__=='__main__':
     parser = argparse.ArgumentParser(description="Evaluation metric")
@@ -35,8 +36,8 @@ if __name__=='__main__':
     data = load_dataset(datapath, split="test")
     logger.info(f"Loaded dataset test from: {datapath}")
     
-    from src.model.models import GeneralModel
-    model = PeftModel.from_pretrained(model=GeneralModel(checkpoint), 
+    base_model = AutoModelForSeq2SeqLM.from_pretrained(checkpoint, torch_dtype=torch.bfloat16)
+    model = PeftModel.from_pretrained(model=base_model, 
                                 model_id="tuquyennnn/LoRA-FlanT5-small-v2",
                                 torch_dtype=torch.bfloat16,
                                 is_trainable=False,
@@ -46,6 +47,6 @@ if __name__=='__main__':
 
     results = evaluation_rouge(model, data)
 
-    # logger.info(results)
+    logger.info(results)
     print(results)
-    print("results is None")
+    # print("results is None")
