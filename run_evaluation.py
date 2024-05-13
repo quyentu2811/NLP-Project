@@ -37,8 +37,9 @@ if __name__=='__main__':
     
     from src.model.models import GeneralModel
     model = PeftModel.from_pretrained(model=GeneralModel(checkpoint), 
-                                model_id="tuquyennnn/LoRA-FlanT5-small-v1",
+                                model_id="tuquyennnn/LoRA-FlanT5-small-v2",
                                 device_map={"cuda": 0} if torch.cuda.is_available() else {"cpu": 0})
+    
     logger.info(f"Loaded model from: {checkpoint}")
 
     results = evaluation_rouge(model, data)
