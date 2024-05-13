@@ -26,10 +26,12 @@ if __name__=='__main__':
     parser = argparse.ArgumentParser(description="Evaluation metric")
     parser.add_argument("--datapath", type=str, default="knkarthick/dialogsum")
     parser.add_argument("--checkpoint", type=str, default="google/flan-t5-small")
+    parser.add_argument("--modelpath", type=str, default="None")
     args = parser.parse_args()
     
     datapath = args.datapath
     checkpoint = args.checkpoint
+    modelpath = args.modelpath
 
     logger.info("Parse arguments!")
 
@@ -38,7 +40,7 @@ if __name__=='__main__':
     
     base_model = AutoModelForSeq2SeqLM.from_pretrained(checkpoint, torch_dtype=torch.bfloat16)
     model = PeftModel.from_pretrained(model=base_model, 
-                                model_id="tuquyennnn/LoRA-FlanT5-small-v2",
+                                model_id=modelpath,
                                 torch_dtype=torch.bfloat16,
                                 is_trainable=False,
                                 device_map='auto')
