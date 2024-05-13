@@ -17,7 +17,7 @@ class GeneralModel(nn.Module):
         """
         Tạo một thiết bị dựa trên khả năng của hệ thống, và tải tokenizer và mô hình từ checkpoint đó
         """
-        super(GeneralModel, self).__init__.from_pretrained(checkpoint)
+        super(GeneralModel, self).__init__.from_pretrained(checkpoint, torch_dtype=torch.float16)
         self.checkpoint = checkpoint
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.tokenizer = AutoTokenizer.from_pretrained(checkpoint)

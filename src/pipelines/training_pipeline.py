@@ -48,12 +48,13 @@ def training_pipeline(args: argparse.Namespace):
         logger.info("Complete loading training arguments!")
 
         # Load trainer
-        trainer = load_trainer(model=peft_model,
-                               training_args=training_args,
-                               dataset=data,
-                               tokenizer=model.tokenizer,
-                               args=args
-                               )
+        trainer = load_trainer(
+                            model=peft_model,
+                            training_args=training_args,
+                            dataset=data,
+                            tokenizer=model.tokenizer,
+                            args=args
+                            )
         logger.info("Complete loading trainer!")
 
         # Train model
