@@ -3,16 +3,15 @@ import logging
 import os
 import sys
 
-from datasets import Dataset, load_dataset
+from datasets import Dataset
 
 import evaluate
-
-import argparse
 
 path = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, path)
 
 from model.models import GeneralModel
+from transformers import AutoTokenizer, AutoModelForSeq2SeqLM, T5Config
 # from data.ingest_data import ingest_data
 # from data.data_strategy import PostPreprocessData
 
@@ -42,14 +41,16 @@ def evaluation_rouge(model: GeneralModel, data: Dataset) -> dict:
 
     model_summaries = []
 
+    tokenizer = AutoTokenizer.from_pretrained(model.base_model.config._name_or_path)
+
     prefix = "Summarize the following conversation:\n\n"
     suffix = "\n\nSummary: "
 
     for idx, dialogue in enumerate(dialogues):
-        input = prefix + dialogue + suffix
-
-        output_text = model.generate(input)
-
+        input_text = prefix + dialogue + suffix
+        input_ids = tokenizer.encode(input_text, return_tensors="pt").to(model.device)
+        output_ids = model.generate(input_ids=input_ids)
+        output_text = tokenizer.decode(output_ids[0], skip_special_tokens=True)
         model_summaries.append(output_text)
 
     rouge_evaluator = RougeEvaluation()
@@ -62,6 +63,9 @@ def evaluation_rouge(model: GeneralModel, data: Dataset) -> dict:
     results["gen_len"] = average_gen_len
 
     return results
+
+if __name__=='__main__':
+    pass
 
 # if __name__=='__main__':
 #     parser = argparse.ArgumentParser(description="Evaluation metric")

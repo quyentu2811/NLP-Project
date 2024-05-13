@@ -3,6 +3,7 @@ import logging
 import os
 import sys
 import torch
+from peft import LoraConfig, get_peft_model, TaskType
 import argparse # module giúp phân tích các tham số dòng lệnh, cho phép
                 # người dùng tùy chỉnh các biến khi chạy script từ terminal
 
@@ -33,23 +34,27 @@ def training_pipeline(args: argparse.Namespace):
         logger.info("Complete pre-processing dataset!")
 
         # optimizer LoRA
-        optimizer = torch.optim.Adam([
-            {'params': model.lora_apdaptations.parameters(), 'lr': 1e-4},
-            {'params': model.lora_revert.parameters(), 'lr': 1e-4},
-            {'params': model.base_model.parameters(), 'lr': 5e-5}
-            ], lr=5e-5)
-
+        lora_config = LoraConfig(
+            r = 32,
+            lora_alpha = 32,
+            target_modules = ["q", "v"],
+            lora_dropout = 0.05,
+            bias = "none",
+            task_type = TaskType.SEQ_2_SEQ_LM
+        )
+        peft_model = get_peft_model(model.base_model,lora_config)
         # Load training arguments
         training_args = load_training_arguments(args)
         logger.info("Complete loading training arguments!")
 
         # Load trainer
-        trainer = load_trainer(model=model.base_model,
-                               training_args=training_args,
-                               dataset=data,
-                               tokenizer=model.tokenizer,
-                               args=args,
-                               optimizer = optimizer)
+        trainer = load_trainer(
+                            model=peft_model,
+                            training_args=training_args,
+                            dataset=data,
+                            tokenizer=model.tokenizer,
+                            args=args
+                            )
         logger.info("Complete loading trainer!")
 
         # Train model
