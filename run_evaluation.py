@@ -43,7 +43,7 @@ if __name__=='__main__':
 
         results = evaluation_rouge(model, data)
 
-        logger.info(results)
+        # logger.info(results)
         print(results)
     except Exception as e:
         logger.error(f"Error: {e}")
