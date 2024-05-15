@@ -149,12 +149,12 @@ def load_training_arguments(args):
 def load_trainer(model, training_args, dataset, tokenizer, args):
     try:
         # callbacks = load_callbacks(args)
-        # def custom_compute_metrics(eval_preds):
-        #     metrics = compute_metrics(eval_preds, tokenizer)
+        def custom_compute_metrics(eval_preds):
+            metrics = compute_metrics(eval_preds, tokenizer)
 
-            # wandb.log(metrics)
+            wandb.log(metrics)
 
-            # return metrics
+            return metrics
 
         # callbacks = [WandBCallback(tokenizer)]
 
@@ -163,9 +163,9 @@ def load_trainer(model, training_args, dataset, tokenizer, args):
             args=training_args,
             train_dataset=dataset["train"],
             eval_dataset=dataset["validation"],
-            tokenizer=tokenizer
+            tokenizer=tokenizer,
             # callbacks=callbacks,
-            # compute_metrics=custom_compute_metrics
+            compute_metrics=custom_compute_metrics
         )
         return trainer
     
