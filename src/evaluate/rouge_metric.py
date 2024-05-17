@@ -19,8 +19,8 @@ def postprocess_text(preds, labels):
     labels = [label.strip() for label in labels]
 
     # rougeLSum expects newline after each sentence
-    preds = ["\n".join(sent_tokenize(pred)) for pred in preds]
-    labels = ["\n".join(sent_tokenize(label)) for label in labels]
+    preds = ["\n".join(nltk.sent_tokenize(pred)) for pred in preds]
+    labels = ["\n".join(nltk.sent_tokenize(label)) for label in labels]
 
     return preds, labels
 
