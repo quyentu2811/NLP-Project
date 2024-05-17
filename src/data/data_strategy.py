@@ -60,9 +60,9 @@ class DataTokenizingStrategy(DataStrategy):
         suffix = "\n\nSummary: "
         inputs = [prefix + input + suffix for input in data["dialogue"]]
 
-        data["input_ids"] = self.tokenizer(inputs, padding="max_length",  truncation=True, return_tensors="pt", max_length = 2048).input_ids
-        data["attention_mask"] = self.tokenizer(inputs, padding="max_length", truncation=True, return_tensors="pt", max_length = 256).attention_mask
-        data["labels"] = self.tokenizer(data["summary"], padding="max_length", truncation=True, return_tensors="pt").input_ids
+        data["input_ids"] = self.tokenizer(inputs, padding="max_length",  truncation=True, return_tensors="pt", max_length = 1024).input_ids
+        data["attention_mask"] = self.tokenizer(inputs, padding="max_length", truncation=True, return_tensors="pt", max_length = 1024).attention_mask
+        data["labels"] = self.tokenizer(data["summary"], padding="max_length", truncation=True, return_tensors="pt", max_length = 256).input_ids
 
 
         label_ignore_ids = []
