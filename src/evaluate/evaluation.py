@@ -13,6 +13,7 @@ path = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, path)
 
 from model.models import GeneralModel
+from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 # from data.ingest_data import ingest_data
 # from data.data_strategy import PostPreprocessData
 
@@ -45,11 +46,13 @@ def evaluation_rouge(model: GeneralModel, data: Dataset) -> dict:
     prefix = "Summarize the followring conversation:\n\n"
     suffix = "\n\nSummary: "
 
+    tokenizer = AutoTokenizer.from_pretrained(model.base_model.config._name_or_path)
+
     for idx, dialogue in enumerate(dialogues):
-        input = prefix + dialogue + suffix
-
-        output_text = model.generate(input)
-
+        input_text = prefix + dialogue + suffix
+        input_ids = tokenizer.encode(input_text, return_tensors="pt").to(model.device)
+        output_ids = model.generate(input_ids=input_ids)
+        output_text = tokenizer.decode(output_ids[0], skip_special_tokens=True)
         model_summaries.append(output_text)
 
     rouge_evaluator = RougeEvaluation()
