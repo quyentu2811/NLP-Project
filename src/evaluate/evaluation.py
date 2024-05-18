@@ -3,17 +3,15 @@ import logging
 import os
 import sys
 
-from datasets import Dataset, load_dataset
+from datasets import Dataset
 
 import evaluate
-
-import argparse
 
 path = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, path)
 
 from model.models import GeneralModel
-from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
+from transformers import AutoTokenizer, AutoModelForSeq2SeqLM, T5Config
 # from data.ingest_data import ingest_data
 # from data.data_strategy import PostPreprocessData
 
@@ -43,10 +41,10 @@ def evaluation_rouge(model: GeneralModel, data: Dataset) -> dict:
 
     model_summaries = []
 
-    prefix = "Summarize the followring conversation:\n\n"
-    suffix = "\n\nSummary: "
-
     tokenizer = AutoTokenizer.from_pretrained(model.base_model.config._name_or_path)
+
+    prefix = "Summarize the following conversation:\n\n"
+    suffix = "\n\nSummary: "
 
     for idx, dialogue in enumerate(dialogues):
         input_text = prefix + dialogue + suffix
@@ -58,12 +56,12 @@ def evaluation_rouge(model: GeneralModel, data: Dataset) -> dict:
     rouge_evaluator = RougeEvaluation()
 
     results = rouge_evaluator.compute_rouge_metric(model_summaries, human_summaries)
-
+    
     generated_lengths = [len(summary.split()) for summary in model_summaries]
     average_gen_len = sum(generated_lengths) / len(generated_lengths) if generated_lengths else 0
 
     results["gen_len"] = average_gen_len
-    
+
     return results
 
 if __name__=='__main__':
@@ -74,6 +72,7 @@ if __name__=='__main__':
 #     parser.add_argument("--datapath", type=str, default="knkarthick/dialogsum")
 #     parser.add_argument("--checkpoint", type=str, default="google/flan-t5-base")
 #     args = parser.parse_args()
+
 
 #     datapath = args.datapath
 #     checkpoint = args.checkpoint
