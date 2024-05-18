@@ -49,35 +49,35 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--early_stopping_patience", type=int, default=2)
     parser.add_argument("--early_stopping_threshold", type=float, default=0.0)
     parser.add_argument("--metric_for_best_model", type=str, default="eval_loss")
-    parser.add_argument("--load_best_model_at_end", type=bool, default=False)
+    parser.add_argument("--load_best_model_at_end", type=bool, default=True)
     args = parser.parse_args()
     return args
 
 
-class WandBCallback(TrainerCallback):
-    def __init__(self, tokenizer):
-        super().__init__()
-        self.tokenizer = tokenizer
-        self.step = 0
+# class WandBCallback(TrainerCallback):
+#     def __init__(self, tokenizer):
+#         super().__init__()
+#         self.tokenizer = tokenizer
+#         self.step = 0
 
-    def on_evaluate(self, args: TrainingArguments, state: TrainerState, control: TrainerControl, **kwargs):
-        epoch = state.epoch
-        logger.info("Current epoch: ", epoch)
+#     def on_evaluate(self, args: TrainingArguments, state: TrainerState, control: TrainerControl, **kwargs):
+#         epoch = state.epoch
+#         logger.info("Current epoch: ", epoch)
 
-        step = state.global_step
-        logger.info("Current step: ", step)
+#         step = state.global_step
+#         logger.info("Current step: ", step)
 
-        print(state.log_history)
-        logger.info(state.log_history)
+#         print(state.log_history)
+#         logger.info(state.log_history)
 
-        training_loss = state.log_history[0]["loss"]
-        logger.info("Current training loss: ", training_loss)
+#         training_loss = state.log_history[0]["loss"]
+#         logger.info("Current training loss: ", training_loss)
 
-        validation_loss = state.log_history[1]["eval_loss"]
-        logger.info("Current valid loss: ", validation_loss)
+#         validation_loss = state.log_history[1]["eval_loss"]
+#         logger.info("Current valid loss: ", validation_loss)
         
-        eval_preds = state.eval_results
-        metrics = compute_metrics(eval_preds, self.tokenizer)
+        # eval_preds = state.eval_results
+        # metrics = compute_metrics(eval_preds, self.tokenizer)
 
         # rouge1 = metrics["rouge1"]
         # rouge2 = metrics["rouge2"]
@@ -85,17 +85,17 @@ class WandBCallback(TrainerCallback):
         # rougeLsum = metrics["rougeLsum"]
         # gen_len = metrics["gen_len"]
         
-        wandb.log({
-            "Training Loss": training_loss,
-            "Validation Loss": validation_loss,
-            "Epoch": epoch,
-            "Step": step
+        # wandb.log({
+        #     "Training Loss": training_loss,
+        #     "Validation Loss": validation_loss,
+        #     "Epoch": epoch,
+        #     "Step": step
             # "Rouge1": rouge1,
             # "Rouge2": rouge2,
             # "RougeL": rougeL,
             # "RougeLsum": rougeLsum,
             # "Gen_Len": gen_len
-        })
+        # })
 
 def load_training_arguments(args):
     try:
@@ -132,40 +132,40 @@ def load_training_arguments(args):
         logger.error(f"Error while loading training arguments: {e}")
         raise e
 
-def load_callbacks(args) -> list:
-    try:
-        callbacks = []
-        early_stopping_callback = EarlyStoppingCallback(
-            early_stopping_patience=args.early_stopping_patience,
-            early_stopping_threshold=args.early_stopping_threshold
-        )
-        callbacks.append(early_stopping_callback)
-        return callbacks
+# def load_callbacks(args) -> list:
+#     try:
+#         callbacks = []
+#         early_stopping_callback = EarlyStoppingCallback(
+#             early_stopping_patience=args.early_stopping_patience,
+#             early_stopping_threshold=args.early_stopping_threshold
+#         )
+#         callbacks.append(early_stopping_callback)
+#         return callbacks
     
-    except Exception as e:
-        logger.error(f"Error while loading callbacks: {e}")
-        raise e
+#     except Exception as e:
+#         logger.error(f"Error while loading callbacks: {e}")
+#         raise e
 
 def load_trainer(model, training_args, dataset, tokenizer, args):
     try:
-        callbacks = load_callbacks(args)
-        def custom_compute_metrics(eval_preds):
-            metrics = compute_metrics(eval_preds, tokenizer)
+        # callbacks = load_callbacks(args)
+        # def custom_compute_metrics(eval_preds):
+        #     metrics = compute_metrics(eval_preds, tokenizer)
 
-            wandb.log(metrics)
+            # wandb.log(metrics)
 
-            return metrics
+            # return metrics
 
-        callbacks = [WandBCallback(tokenizer)]
+        # callbacks = [WandBCallback(tokenizer)]
 
         trainer = Seq2SeqTrainer(
             model=model,
             args=training_args,
             train_dataset=dataset["train"],
             eval_dataset=dataset["validation"],
-            tokenizer=tokenizer,
-            callbacks=callbacks,
-            compute_metrics=custom_compute_metrics
+            tokenizer=tokenizer
+            # callbacks=callbacks,
+            # compute_metrics=custom_compute_metrics
         )
         return trainer
     
