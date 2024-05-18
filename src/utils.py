@@ -83,19 +83,19 @@ def load_training_arguments(args):
         logger.error(f"Error while loading training arguments: {e}")
         raise e
 
-def load_callbacks(args) -> list:
-    try:
-        callbacks = []
-        early_stopping_callback = EarlyStoppingCallback(
-            early_stopping_patience=args.early_stopping_patience,
-            early_stopping_threshold=args.early_stopping_threshold
-        )
-        callbacks.append(early_stopping_callback)
-        return callbacks
+# def load_callbacks(args) -> list:
+#     try:
+#         callbacks = []
+#         early_stopping_callback = EarlyStoppingCallback(
+#             early_stopping_patience=args.early_stopping_patience,
+#             early_stopping_threshold=args.early_stopping_threshold
+#         )
+#         callbacks.append(early_stopping_callback)
+#         return callbacks
     
-    except Exception as e:
-        logger.error(f"Error while loading callbacks: {e}")
-        raise e
+#     except Exception as e:
+#         logger.error(f"Error while loading callbacks: {e}")
+#         raise e
 
 def load_trainer(model, training_args, dataset, tokenizer, args):
     try:
