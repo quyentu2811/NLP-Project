@@ -76,8 +76,8 @@ class WandBCallback(TrainerCallback):
         validation_loss = state.log_history[1]["eval_loss"]
         logger.info("Current valid loss: ", validation_loss)
         
-        # eval_preds = state.eval_results
-        # metrics = compute_metrics(eval_preds, self.tokenizer)
+        eval_preds = state.eval_results
+        metrics = compute_metrics(eval_preds, self.tokenizer)
 
         # rouge1 = metrics["rouge1"]
         # rouge2 = metrics["rouge2"]
@@ -132,23 +132,23 @@ def load_training_arguments(args):
         logger.error(f"Error while loading training arguments: {e}")
         raise e
 
-# def load_callbacks(args) -> list:
-#     try:
-#         callbacks = []
-#         early_stopping_callback = EarlyStoppingCallback(
-#             early_stopping_patience=args.early_stopping_patience,
-#             early_stopping_threshold=args.early_stopping_threshold
-#         )
-#         callbacks.append(early_stopping_callback)
-#         return callbacks
+def load_callbacks(args) -> list:
+    try:
+        callbacks = []
+        early_stopping_callback = EarlyStoppingCallback(
+            early_stopping_patience=args.early_stopping_patience,
+            early_stopping_threshold=args.early_stopping_threshold
+        )
+        callbacks.append(early_stopping_callback)
+        return callbacks
     
-#     except Exception as e:
-#         logger.error(f"Error while loading callbacks: {e}")
-#         raise e
+    except Exception as e:
+        logger.error(f"Error while loading callbacks: {e}")
+        raise e
 
 def load_trainer(model, training_args, dataset, tokenizer, args):
     try:
-        # callbacks = load_callbacks(args)
+        callbacks = load_callbacks(args)
         def custom_compute_metrics(eval_preds):
             metrics = compute_metrics(eval_preds, tokenizer)
 
@@ -156,7 +156,7 @@ def load_trainer(model, training_args, dataset, tokenizer, args):
 
             return metrics
 
-        # callbacks = [WandBCallback(tokenizer)]
+        callbacks = [WandBCallback(tokenizer)]
 
         trainer = Seq2SeqTrainer(
             model=model,
@@ -164,7 +164,7 @@ def load_trainer(model, training_args, dataset, tokenizer, args):
             train_dataset=dataset["train"],
             eval_dataset=dataset["validation"],
             tokenizer=tokenizer,
-            # callbacks=callbacks,
+            callbacks=callbacks,
             compute_metrics=custom_compute_metrics
         )
         return trainer
