@@ -48,8 +48,7 @@ def evaluation_rouge(model: GeneralModel, data: Dataset) -> dict:
 
     for idx, dialogue in enumerate(dialogues):
         input_text = prefix + dialogue + suffix
-        output_ids = model.generate(input_text=input_text)
-        output_text = tokenizer.decode(output_ids[0], skip_special_tokens=True)
+        output_text = model.generate(input_text=input_text)
         model_summaries.append(output_text)
 
     rouge_evaluator = RougeEvaluation()
