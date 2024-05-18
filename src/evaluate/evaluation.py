@@ -3,15 +3,17 @@ import logging
 import os
 import sys
 
-from datasets import Dataset
+from datasets import Dataset, load_dataset
 
 import evaluate
+
+import argparse
 
 path = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, path)
 
 from model.models import GeneralModel
-from transformers import AutoTokenizer, AutoModelForSeq2SeqLM, T5Config
+from transformers import AutoTokenizer
 # from data.ingest_data import ingest_data
 # from data.data_strategy import PostPreprocessData
 
@@ -43,44 +45,46 @@ def evaluation_rouge(model: GeneralModel, data: Dataset) -> dict:
 
     tokenizer = AutoTokenizer.from_pretrained(model.base_model.config._name_or_path)
 
-    prefix = "Summarize the following conversation:\n\n"
+    prefix = "Summarize the followring conversation:\n\n"
     suffix = "\n\nSummary: "
 
     for idx, dialogue in enumerate(dialogues):
         input = prefix + dialogue + suffix
-
-        output_text = model.generate(input)
+        inputs = tokenizer(input, return_tensors='pt')
+        output_text = tokenizer.decode(
+            model.base_model.generate(
+                inputs["input_ids"],
+                max_new_tokens=200,
+            )[0],
+            skip_special_tokens=True
+            )
 
         model_summaries.append(output_text)
 
     rouge_evaluator = RougeEvaluation()
 
     results = rouge_evaluator.compute_rouge_metric(model_summaries, human_summaries)
-    
+
     generated_lengths = [len(summary.split()) for summary in model_summaries]
     average_gen_len = sum(generated_lengths) / len(generated_lengths) if generated_lengths else 0
 
     results["gen_len"] = average_gen_len
-
+    
     return results
 
 if __name__=='__main__':
-    pass
+    parser = argparse.ArgumentParser(description="Evaluation metric")
+    parser.add_argument("--datapath", type=str, default="knkarthick/dialogsum")
+    parser.add_argument("--checkpoint", type=str, default="google/flan-t5-base")
+    args = parser.parse_args()
 
-# if __name__=='__main__':
-#     parser = argparse.ArgumentParser(description="Evaluation metric")
-#     parser.add_argument("--datapath", type=str, default="knkarthick/dialogsum")
-#     parser.add_argument("--checkpoint", type=str, default="google/flan-t5-base")
-#     args = parser.parse_args()
+    datapath = args.datapath
+    checkpoint = args.checkpoint
 
+    data = load_dataset(datapath, split="test")
 
-#     datapath = args.datapath
-#     checkpoint = args.checkpoint
+    model = GeneralModel(checkpoint)
 
-#     data = load_dataset(datapath, split="test")
-
-#     model = GeneralModel(checkpoint)
-
-#     results = evaluation_rouge(model, data)
-#     logger.info(results)
-#     print(results)
+    results = evaluation_rouge(model, data)
+    logger.info(results)
+    print(results)
