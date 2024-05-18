@@ -1,16 +1,17 @@
 import logging
 
-import os
-import sys
+import os 
+import sys 
 
-from datasets import DatasetDict
+from datasets import DatasetDict 
 
-from transformers import AutoTokenizer
+from transformers import AutoTokenizer 
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 path = os.path.abspath(os.path.dirname(__file__))
+
 sys.path.insert(0, path)
 
 from data_strategy import *
@@ -32,12 +33,10 @@ class DataPreprocessing:
             logger.error(f"Error while preprocessing data: {e}")
             raise e
         
-
 def preprocessing_data(data: DatasetDict, tokenizer, *args) -> DatasetDict:
     try:
         tokenizing_strategy = DataTokenizingStrategy(tokenizer)
         data_preprocess = DataPreprocessing(data, tokenizing_strategy)
-
         tokenized_data = data_preprocess.handle_data()
 
         return tokenized_data

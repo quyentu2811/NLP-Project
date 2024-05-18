@@ -1,8 +1,8 @@
 import logging
-from datasets import load_dataset
-from datasets import DatasetDict
+from datasets import load_dataset 
+from datasets import DatasetDict 
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.INFO) 
 logger = logging.getLogger(__name__)
 
 class IngestDataset:
@@ -11,12 +11,10 @@ class IngestDataset:
 
     def get_data(self) -> DatasetDict:
         logger.info(f"Loading data from {self.datapath}")
-
-        data = load_dataset(self.datapath, trust_remote_code=True)
+        data = load_dataset(self.datapath, trust_remote_code=True) 
         logger.info(f"Complete loading data from {self.datapath}")
         
         return data
-    
 
 def ingest_data(datapath: str) -> DatasetDict:
     try:

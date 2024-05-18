@@ -4,10 +4,9 @@ from abc import ABC, abstractclassmethod
 from datasets import DatasetDict, Dataset
 from transformers import AutoTokenizer
 from ingest_data import ingest_data
-
+# Khởi tạo để ghi lại các thông báo trên màn hình từ mức độ Info trở lên
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
 
 class DataStrategy(ABC):
     """
@@ -19,11 +18,7 @@ class DataStrategy(ABC):
 
 
 class DataDivideStrategy(DataStrategy):
-    def handle_data(self, data: Dataset, *args) -> DatasetDict:
-        """
-        If loaded dataset is not divided, this method is used to split data using 
-        Dataset.train_test_split() of hugging face
-        """
+    def handle_data(self, data: Dataset, *args) -> DatasetDict: # kế thừa từ lớp DataStrategy
         try:
             pass
 
@@ -35,19 +30,20 @@ class DataDivideStrategy(DataStrategy):
 class DataTokenizingStrategy(DataStrategy):
     def __init__(self, tokenizer) -> None:
         self.tokenizer = tokenizer
+    # Khởi tạo với một bộ tách từ và định nghĩa phương thức handle_data để tách dữ liệu
 
     def handle_data(self, data: DatasetDict, *args) -> DatasetDict:
         try:
-            
+            # thiết lập kết thúc câu (eos_token) làm token đệm (pad_token): dùng cho BART
             self.tokenizer.pad_token = self.tokenizer.eos_token
 
             logger.info(f"Tokenizing dataset!")
+
             tokenized_dataset = data.map(self.preprocess_function, batched=True)
 
             logger.info(f"Removing unnecessary columns!")
-            tokenized_dataset = tokenized_dataset.remove_columns([key for key in data["train"][0].keys()])
 
-            # tokenized_dataset = tokenized_dataset.filter(lambda example, index: index%100==0, with_indices=True)
+            tokenized_dataset = tokenized_dataset.remove_columns([key for key in data["train"][0].keys()])
 
             return tokenized_dataset
 
@@ -58,10 +54,13 @@ class DataTokenizingStrategy(DataStrategy):
     def preprocess_function(self, data: Dataset, *args) -> Dataset:
         prefix = "Summarize the following conversation:\\nn"
         suffix = "\n\nSummary: "
+
         inputs = [prefix + input + suffix for input in data["dialogue"]]
 
         data["input_ids"] = self.tokenizer(inputs, padding="max_length", truncation=True, return_tensors="pt").input_ids
+
         data["attention_mask"] = self.tokenizer(inputs, padding="max_length", truncation=True, return_tensors="pt").attention_mask
+
         data["labels"] = self.tokenizer(data["summary"], padding="max_length", truncation=True, return_tensors="pt").input_ids
 
         label_ignore_ids = []

@@ -21,6 +21,7 @@ from src.evaluate.rouge_metric import compute_metrics
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# định nghĩa và phân tích các tham số dòng lệnh để cấu hình quá trình huấn luyện.
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Fine tuning LLM for Dialogue Text Summarization")
     parser.add_argument("--configpath", type=str, default=None)
@@ -46,15 +47,15 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--save_total_limit", type=int, default=None)
     parser.add_argument("--report_to", type=str, default="wandb")
     parser.add_argument("--run_name", type=str, default="flan-t5-base-model")
-    parser.add_argument("--early_stopping_patience", type=int, default=2)
+    parser.add_argument("--early_stopping_patience", type=int, default=5)
     parser.add_argument("--early_stopping_threshold", type=float, default=0.0)
     parser.add_argument("--metric_for_best_model", type=str, default="eval_loss")
     parser.add_argument("--load_best_model_at_end", type=bool, default=False)
+    # parser.add_argument("--bf16", type=bool, default=True)
     args = parser.parse_args()
     return args
 
-
-# class WandBCallback(TrainerCallback):
+# class WandbCallback(TrainerCallback):
 #     def __init__(self, tokenizer):
 #         super().__init__()
 #         self.tokenizer = tokenizer
@@ -62,42 +63,33 @@ def parse_args() -> argparse.Namespace:
 
 #     def on_evaluate(self, args: TrainingArguments, state: TrainerState, control: TrainerControl, **kwargs):
 #         epoch = state.epoch
-#         logger.info("Current epoch: ", epoch)
-
+#         logger.info("Curent epoch: ", epoch)
+        
 #         step = state.global_step
-#         logger.info("Current step: ", step)
+#         logger.info("Curent step: ", step)
 
-#         print(state.log_history)
 #         logger.info(state.log_history)
 
 #         training_loss = state.log_history[0]["loss"]
 #         logger.info("Current training loss: ", training_loss)
 
 #         validation_loss = state.log_history[1]["eval_loss"]
-#         logger.info("Current valid loss: ", validation_loss)
-        
-        # eval_preds = state.eval_results
-        # metrics = compute_metrics(eval_preds, self.tokenizer)
+#         logger.info("Curent valid loss: ", validation_loss)
 
-        # rouge1 = metrics["rouge1"]
-        # rouge2 = metrics["rouge2"]
-        # rougeL = metrics["rougeL"]
-        # rougeLsum = metrics["rougeLsum"]
-        # gen_len = metrics["gen_len"]
-        
-        # wandb.log({
-        #     "Training Loss": training_loss,
-        #     "Validation Loss": validation_loss,
-        #     "Epoch": epoch,
-        #     "Step": step
-            # "Rouge1": rouge1,
-            # "Rouge2": rouge2,
-            # "RougeL": rougeL,
-            # "RougeLsum": rougeLsum,
-            # "Gen_Len": gen_len
-        # })
+#         wandb.log({
+#             "Training Loss": training_loss,
+#             "Validation Loss": validation_loss,
+#             "Epoch": epoch,
+#             "Step": step
+#         }) 
 
 def load_training_arguments(args):
+    """
+    Tùy thuộc vào việc có cung cấp đường dẫn file cấu hình hay không, hàm này sẽ tải các tham số huấn 
+    luyện từ file cấu hình YAML hoặc trực tiếp từ các tham số dòng lệnh đã phân tích. Các tham số này 
+    được sử dụng để thiết lập Seq2SeqTrainingArguments, cấu hình chi tiết như kích thước lô, tốc độ 
+    học, chiến lược ghi nhật ký và lưu trữ, v.v.
+    """
     try:
         if args.configpath is not None:
             config = load_config(configpath=args.configpath)
@@ -122,8 +114,9 @@ def load_training_arguments(args):
                 push_to_hub=args.push_to_hub,
                 report_to=args.report_to,
                 metric_for_best_model=args.metric_for_best_model,
-                load_best_model_at_end=args.load_best_model_at_end,
+                load_best_model_at_end=True,
                 run_name=args.run_name
+                # fp16 = args.fp16
             )
 
         return training_args
@@ -133,6 +126,11 @@ def load_training_arguments(args):
         raise e
 
 # def load_callbacks(args) -> list:
+#     """
+#     Thiết lập một EarlyStoppingCallback dựa trên các giá trị kiên nhẫn và ngưỡng đã chỉ định. Callback 
+#     này sẽ dừng huấn luyện sớm nếu chỉ số đã chọn (như lỗi đánh giá) không cải thiện quá một ngưỡng 
+#     nhất định trong một số lần kiểm tra đánh giá.
+#     """
 #     try:
 #         callbacks = []
 #         early_stopping_callback = EarlyStoppingCallback(
@@ -149,23 +147,18 @@ def load_training_arguments(args):
 def load_trainer(model, training_args, dataset, tokenizer, args):
     try:
         # callbacks = load_callbacks(args)
-        def custom_compute_metrics(eval_preds):
-            metrics = compute_metrics(eval_preds, tokenizer)
-
-            wandb.log(metrics)
-
-            return metrics
-
-        # callbacks = [WandBCallback(tokenizer)]
+        # def custom_compute_metrics(eval_preds):
+        #     return compute_metrics(eval_preds, tokenizer)
 
         trainer = Seq2SeqTrainer(
             model=model,
             args=training_args,
             train_dataset=dataset["train"],
             eval_dataset=dataset["validation"],
-            tokenizer=tokenizer,
-            # callbacks=callbacks,
-            compute_metrics=custom_compute_metrics
+            tokenizer=tokenizer
+            # optimizers = (optimizer, None)
+            # callbacks=callbacks
+            # compute_metrics=custom_compute_metrics
         )
         return trainer
     
@@ -174,6 +167,10 @@ def load_trainer(model, training_args, dataset, tokenizer, args):
         raise e
 
 def load_config(configpath):
+    """
+    Tải một file cấu hình YAML nếu tồn tại. File này có thể chứa bất kỳ số lượng cài đặt nào cần thiết 
+    cho việc huấn luyện, như các tham số mô hình, tham số huấn luyện, hoặc các cấu hình khác.
+    """
     if os.path.exists(configpath):
         with open(configpath, "r") as f:
             config = yaml.safe_load(f)

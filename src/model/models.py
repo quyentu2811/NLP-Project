@@ -1,20 +1,20 @@
 import logging
-import torch
+import torch 
+import torch.nn as nn
+from transformers import AutoTokenizer, AutoModelForSeq2SeqLM, T5Config
 
-from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.ERROR)
 logger = logging.getLogger(__name__)
 
-
-# General class for BART and FLAN-T5
-class GeneralModel:
+class GeneralModel(nn.Module):
     def __init__(self, checkpoint):
+        super(GeneralModel, self).__init__()
         self.checkpoint = checkpoint
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.tokenizer = AutoTokenizer.from_pretrained(checkpoint)
-        self.base_model = AutoModelForSeq2SeqLM.from_pretrained(checkpoint, torch_dtype=torch.bfloat16).to(self.device)
-
+        self.base_model = AutoModelForSeq2SeqLM.from_pretrained(checkpoint, torch_dtype = torch.bfloat16).to(self.device)
+    
     def forward(self, input_text, **kwargs):
         input_ids = self.tokenizer.encode(input_text, return_tensors="pt").to(self.device)
         outputs = self.base_model.generate(input_ids, **kwargs)
@@ -31,7 +31,6 @@ class GeneralModel:
             logger.error(f"Error while generating: {e}")
             raise e
 
-
 # FLAN-T5 MODEL
 class FlanT5Model(GeneralModel):
     def __init__(self, checkpoint):
@@ -42,8 +41,6 @@ class FlanT5Model(GeneralModel):
 class BartModel(GeneralModel):
     def __init__(self, checkpoint):
         super().__init__(checkpoint)  
-
-
 
 def load_model(checkpoint):
     """
