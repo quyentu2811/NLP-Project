@@ -13,7 +13,7 @@ class GeneralModel(nn.Module):
         self.checkpoint = checkpoint
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.tokenizer = AutoTokenizer.from_pretrained(checkpoint)
-        self.base_model = AutoModelForSeq2SeqLM.from_pretrained(checkpoint, torch_dtype = torch.bfloat16).to(self.device)
+        self.base_model = AutoModelForSeq2SeqLM.from_pretrained(checkpoint, torch_dtype = torch.float16).to(self.device)
     
     def forward(self, input_text, **kwargs):
         input_ids = self.tokenizer.encode(input_text, return_tensors="pt").to(self.device)
