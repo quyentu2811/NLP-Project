@@ -45,7 +45,7 @@ def evaluation_rouge(model: GeneralModel, data: Dataset) -> dict:
     prefix = "Summarize the followring conversation:\n\n"
     suffix = "\n\nSummary: "
 
-    for dialogue in enumerate(dialogues):
+    for dialogue in dialogues:
         input = prefix + dialogue + suffix
 
         output_text = model.generate(input)
