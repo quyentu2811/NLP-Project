@@ -18,8 +18,8 @@ class GeneralModel:
     def generate(self, input_text, **kwargs):
         try:
             logger.info(f"Generating output...")
-            input_ids = self.tokenizer.encode(input_text, return_tensors="pt").to(self.device)
-            outputs = self.base_model.generate(input_ids,  generation_config=GenerationConfig(max_new_tokens=200, num_beams=1))
+            input_ids = self.tokenizer(input_text, return_tensors="pt").to(self.device)
+            outputs = self.base_model.generate(input_ids, **kwargs)
             generated_text = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
             logger.info(f"Summary: {generated_text}")
 

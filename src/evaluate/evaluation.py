@@ -8,7 +8,7 @@ from datasets import Dataset, load_dataset
 import evaluate
 
 import argparse
-
+from transformers import GenerationConfig
 path = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, path)
 
@@ -45,7 +45,7 @@ def evaluation_rouge(model: GeneralModel, data: Dataset) -> dict:
     prefix = "Summarize the followring conversation:\n\n"
     suffix = "\n\nSummary: "
 
-    for dialogue in dialogues:
+    for idx, dialogue in enumerate(dialogues):
         input = prefix + dialogue + suffix
 
         output_text = model.generate(input)
