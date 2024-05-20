@@ -15,7 +15,7 @@ class GeneralModel:
         self.tokenizer = AutoTokenizer.from_pretrained(checkpoint)
         self.base_model = AutoModelForSeq2SeqLM.from_pretrained(checkpoint).to(self.device)
 
-    def generate(self, input_text, **kwargs):
+    def generate_summarize(self, input_text, **kwargs):
         try:
             logger.info(f"Generating output...")
             input_ids = self.tokenizer(input_text, return_tensors="pt").to(self.device)

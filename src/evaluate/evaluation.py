@@ -48,7 +48,7 @@ def evaluation_rouge(model: GeneralModel, data: Dataset) -> dict:
     for idx, dialogue in enumerate(dialogues):
         input = prefix + dialogue + suffix
 
-        output_text = model.generate(input, max_length = 200)
+        output_text = model.generate_summarize(input, max_length = 200)
 
         model_summaries.append(output_text)
 
